@@ -108,40 +108,43 @@
                 .catch(() => alert("Không thể sao chép key, hãy thử lại!"));
         }
 
-        // Load key khi DOM sẵn sàng
-        document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("current-date").textContent = getCurrentDate();
-            const keyDisplay = document.getElementById("key-display");
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("current-date").textContent = getCurrentDate();
+    const keyDisplay = document.getElementById("key-display");
 
-            fetch("https://thevykey.x10.mx/api/get-key-random.php")
+    // ❌ Bỏ hoàn toàn phần lấy key từ URL
+    // const key = getQueryParam("key");
+
+    // ✅ Thay bằng gọi API như sau:
+    fetch("https://thevykey.x10.mx/api/get-key-random.php")
+        .then(res => res.json())
+        .then(data => {
+            if (!data.key) {
+                keyDisplay.textContent = "❌ Không lấy được key.";
+                return;
+            }
+
+            const key = data.key;
+
+            fetch(`https://thevykey.x10.mx/api/verify.php?key=${key}&token=thevydzi`)
                 .then(res => res.json())
-                .then(data => {
-                    if (!data.key) {
-                        keyDisplay.textContent = "❌ Không lấy được key.";
-                        return;
+                .then(result => {
+                    if (result.success && result.key) {
+                        currentKey = result.key;
+                        keyDisplay.textContent = currentKey;
+                    } else {
+                        keyDisplay.textContent = "❌ Key không hợp lệ.";
                     }
-
-                    const key = data.key;
-
-                    fetch(`https://thevykey.x10.mx/api/verify.php?key=${key}&token=${token}`)
-                        .then(res => res.json())
-                        .then(result => {
-                            if (result.success && result.key) {
-                                currentKey = result.key;
-                                keyDisplay.textContent = currentKey;
-                            } else {
-                                keyDisplay.textContent = "❌ Key không hợp lệ.";
-                            }
-                        })
-                        .catch(() => {
-                            keyDisplay.textContent = "❌ Lỗi xác minh key.";
-                        });
-
                 })
                 .catch(() => {
-                    keyDisplay.textContent = "❌ Lỗi khi lấy key.";
+                    keyDisplay.textContent = "❌ Lỗi xác minh key.";
                 });
+
+        })
+        .catch(() => {
+            keyDisplay.textContent = "❌ Lỗi khi lấy key.";
         });
+});
     </script>
 </body>
 </html>
