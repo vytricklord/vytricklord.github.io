@@ -113,7 +113,7 @@
             document.getElementById("current-date").textContent = getCurrentDate();
             const keyDisplay = document.getElementById("key-display");
 
-            fetch("https://thevykey.x10.mx/api/get-random-key.php")
+            fetch("https://thevykey.x10.mx/api/get-key-random.php")
                 .then(res => res.json())
                 .then(data => {
                     if (!data.key) {
