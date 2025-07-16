@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini AI Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6b7280;
+      border-radius: 10px;
+    }
+    .glow {
+      text-shadow: 0 0 10px #7f5af0, 0 0 20px #7f5af0;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] min-h-screen flex items-center justify-center text-white p-4">
+
+  <div class="w-full max-w-2xl bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/10 space-y-4">
+    <h1 class="text-3xl font-bold text-center text-indigo-400 glow mb-4">
+      <i class='bx bx-bot text-4xl align-middle'></i> Gemini AI Chatbot
+    </h1>
+
+    <div id="chatbox" class="h-96 overflow-y-auto space-y-4 p-4 bg-black/30 rounded-lg text-sm">
+      <!-- Messages here -->
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input id="userInput" type="text" placeholder="Nhập câu hỏi..." class="flex-1 px-4 py-2 rounded-xl text-black outline-none focus:ring-2 focus:ring-indigo-500" />
+      <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl shadow-md">
+        <i class='bx bx-send'></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyBoShXF0dLqJqxwpYNtXdfSYrPhX61-4kc";
+    const chatBox = document.getElementById('chatbox');
+    const input = document.getElementById('userInput');
+    let history = [];
+
+    function addMessage(role, text) {
+      const isUser = role === 'user';
+      const icon = isUser ? "<i class='bx bx-user-circle text-xl'></i>" : "<i class='bx bx-bot text-xl text-indigo-400'></i>";
+      const name = isUser ? "Bạn" : "Gemini";
+      const bg = isUser ? "bg-white/10" : "bg-indigo-500/20";
+      chatBox.innerHTML += `
+        <div class="flex items-start space-x-2 ${bg} p-3 rounded-xl">
+          ${icon}
+          <div>
+            <p class="font-semibold mb-1">${name}:</p>
+            <p class="whitespace-pre-line">${text}</p>
+          </div>
+        </div>
+      `;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      addMessage("user", userMessage);
+      input.value = '';
+      history.push({ role: "user", parts: [{ text: userMessage }] });
+
+      try {
+        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: history })
+        });
+        const data = await res.json();
+        const aiMessage = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi từ Gemini.";
+        addMessage("model", aiMessage);
+        history.push({ role: "model", parts: [{ text: aiMessage }] });
+      } catch (err) {
+        addMessage("model", `❌ Lỗi khi gọi API: ${err.message}`);
+      }
+    }
+
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+
+</body>
+</html>
