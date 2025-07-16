@@ -3,32 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gemini AI Chat</title>
-  <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <title>Chat Gemini Flash</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
   <style>
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #6b7280;
-      border-radius: 10px;
-    }
-    .glow {
-      text-shadow: 0 0 10px #7f5af0, 0 0 20px #7f5af0;
-    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 8px; }
+    .glow { text-shadow: 0 0 10px #7f5af0, 0 0 20px #7f5af0; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] min-h-screen flex items-center justify-center text-white p-4">
 
-  <div class="w-full max-w-2xl bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/10 space-y-4">
+  <div class="w-full max-w-2xl bg-white/10 backdrop-blur p-6 rounded-2xl shadow-xl border border-white/10 space-y-4">
     <h1 class="text-3xl font-bold text-center text-indigo-400 glow mb-4">
-      <i class='bx bx-bot text-4xl align-middle'></i> Gemini AI Chatbot
+      <i class='bx bx-bot text-4xl align-middle'></i> Gemini Flash AI
     </h1>
 
-    <div id="chatbox" class="h-96 overflow-y-auto space-y-4 p-4 bg-black/30 rounded-lg text-sm">
-      <!-- Messages here -->
-    </div>
+    <div id="chatbox" class="h-96 overflow-y-auto space-y-4 p-4 bg-black/30 rounded-lg text-sm"></div>
 
     <div class="flex items-center gap-2">
       <input id="userInput" type="text" placeholder="Nhập câu hỏi..." class="flex-1 px-4 py-2 rounded-xl text-black outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -40,9 +31,11 @@
 
   <script>
     const API_KEY = "AIzaSyBoShXF0dLqJqxwpYNtXdfSYrPhX61-4kc";
+    const MODEL = "gemini-2.0-flash";
+    const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+    
     const chatBox = document.getElementById('chatbox');
     const input = document.getElementById('userInput');
-    let history = [];
 
     function addMessage(role, text) {
       const isUser = role === 'user';
@@ -62,25 +55,32 @@
     }
 
     async function sendMessage() {
-      const userMessage = input.value.trim();
-      if (!userMessage) return;
-
-      addMessage("user", userMessage);
+      const userText = input.value.trim();
+      if (!userText) return;
+      addMessage("user", userText);
       input.value = '';
-      history.push({ role: "user", parts: [{ text: userMessage }] });
 
       try {
-        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY, {
+        const response = await fetch(ENDPOINT, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: history })
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: userText }]
+              }
+            ]
+          })
         });
-        const data = await res.json();
-        const aiMessage = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi từ Gemini.";
-        addMessage("model", aiMessage);
-        history.push({ role: "model", parts: [{ text: aiMessage }] });
+
+        const result = await response.json();
+        const reply = result?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi từ Gemini.";
+        addMessage("bot", reply);
       } catch (err) {
-        addMessage("model", `❌ Lỗi khi gọi API: ${err.message}`);
+        addMessage("bot", `❌ Lỗi gọi API: ${err.message}`);
       }
     }
 
