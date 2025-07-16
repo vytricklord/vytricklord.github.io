@@ -1,150 +1,93 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cảm Ơn Bạn</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(120deg, #89f7fe, #66a6ff);
-            color: #fff;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-top: 20px;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        .container {
-            margin: 40px auto;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            display: inline-block;
-            width: 80%;
-            max-width: 400px;
-        }
-        .container p {
-            font-size: 1.2rem;
-            color: #333;
-        }
-        .key-container {
-            background: #f9f9f9;
-            border-radius: 10px;
-            padding: 10px 15px;
-            border: 2px dashed #007BFF;
-            margin-top: 10px;
-            display: inline-block;
-            cursor: pointer;
-            color: #007BFF;
-            font-weight: bold;
-            font-size: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        .key-container:hover {
-            background: #007BFF;
-            color: #fff;
-            border-color: #0056b3;
-        }
-        img {
-            margin-top: 20px;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-        }
-        .footer {
-            margin-top: 40px;
-            font-size: 0.9rem;
-        }
-        .footer a {
-            color: #ffe400;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini AI Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #6b7280;
+      border-radius: 10px;
+    }
+    .glow {
+      text-shadow: 0 0 10px #7f5af0, 0 0 20px #7f5af0;
+    }
+  </style>
 </head>
-<body>
-    <h1>CẢM ƠN BẠN</h1>
-    <!--img src="/getkey/e1db0a3e397f47eef24387bd95064732.jpg" alt="TheVy"-->   
-    <div class="container">
-        <p>Chúc Bạn Ngày Mới Tốt Lành!</p>
-        <p>API Key ngày <span id="current-date">dd/mm/yyyy</span> là:</p>
-        <div class='key-container' id="key-display" onclick="copyToClipboard()">Đang tải key...</div>
-        <p>(Nhấn vào key để sao chép)</p>
-    </div>
-    <div class="footer">
-        <p>Copyright ©2024 | YOUTUBE :
-            <a href="https://youtube.com/Herlyswartool">HERLYS WAR TOOL</a>
-        </p>
+<body class="bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] min-h-screen flex items-center justify-center text-white p-4">
+
+  <div class="w-full max-w-2xl bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/10 space-y-4">
+    <h1 class="text-3xl font-bold text-center text-indigo-400 glow mb-4">
+      <i class='bx bx-bot text-4xl align-middle'></i> Gemini AI Chatbot
+    </h1>
+
+    <div id="chatbox" class="h-96 overflow-y-auto space-y-4 p-4 bg-black/30 rounded-lg text-sm">
+      <!-- Messages here -->
     </div>
 
-    <script>
-        const token = "thevydzi";
-        let currentKey = "";
+    <div class="flex items-center gap-2">
+      <input id="userInput" type="text" placeholder="Nhập câu hỏi..." class="flex-1 px-4 py-2 rounded-xl text-black outline-none focus:ring-2 focus:ring-indigo-500" />
+      <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl shadow-md">
+        <i class='bx bx-send'></i>
+      </button>
+    </div>
+  </div>
 
-        // Lấy ngày hiện tại
-        function getCurrentDate() {
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            return `${dd}/${mm}/${yyyy}`;
-        }
+  <script>
+    const API_KEY = "AIzaSyBoShXF0dLqJqxwpYNtXdfSYrPhX61-4kc";
+    const chatBox = document.getElementById('chatbox');
+    const input = document.getElementById('userInput');
+    let history = [];
 
-        // Sao chép key
-        function copyToClipboard() {
-            if (!currentKey) return;
-            navigator.clipboard.writeText(currentKey)
-                .then(() => alert("Key đã được sao chép: " + currentKey))
-                .catch(() => alert("Không thể sao chép key, hãy thử lại!"));
-        }
+    function addMessage(role, text) {
+      const isUser = role === 'user';
+      const icon = isUser ? "<i class='bx bx-user-circle text-xl'></i>" : "<i class='bx bx-bot text-xl text-indigo-400'></i>";
+      const name = isUser ? "Bạn" : "Gemini";
+      const bg = isUser ? "bg-white/10" : "bg-indigo-500/20";
+      chatBox.innerHTML += `
+        <div class="flex items-start space-x-2 ${bg} p-3 rounded-xl">
+          ${icon}
+          <div>
+            <p class="font-semibold mb-1">${name}:</p>
+            <p class="whitespace-pre-line">${text}</p>
+          </div>
+        </div>
+      `;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("current-date").textContent = getCurrentDate();
-    const keyDisplay = document.getElementById("key-display");
+    async function sendMessage() {
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
 
-    // ❌ Bỏ hoàn toàn phần lấy key từ URL
-    // const key = getQueryParam("key");
+      addMessage("user", userMessage);
+      input.value = '';
+      history.push({ role: "user", parts: [{ text: userMessage }] });
 
-    // ✅ Thay bằng gọi API như sau:
-    fetch("https://thevykey.x10.mx/api/get-key-random.php")
-        .then(res => res.json())
-        .then(data => {
-            if (!data.key) {
-                keyDisplay.textContent = "❌ Không lấy được key.";
-                return;
-            }
-
-            const key = data.key;
-
-            fetch(`https://thevykey.x10.mx/api/verify.php?key=${key}&token=thevydzi`)
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success && result.key) {
-                        currentKey = result.key;
-                        keyDisplay.textContent = currentKey;
-                    } else {
-                        keyDisplay.textContent = "❌ Key không hợp lệ.";
-                    }
-                })
-                .catch(() => {
-                    keyDisplay.textContent = "❌ Lỗi xác minh key.";
-                });
-
-        })
-        .catch(() => {
-            keyDisplay.textContent = "❌ Lỗi khi lấy key.";
+      try {
+        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: history })
         });
-});
-    </script>
+        const data = await res.json();
+        const aiMessage = data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ Không có phản hồi từ Gemini.";
+        addMessage("model", aiMessage);
+        history.push({ role: "model", parts: [{ text: aiMessage }] });
+      } catch (err) {
+        addMessage("model", `❌ Lỗi khi gọi API: ${err.message}`);
+      }
+    }
+
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+
 </body>
 </html>
